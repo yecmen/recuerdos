@@ -140,3 +140,17 @@ h1, h2, h3, h4 {
     font-size: 1.25rem;
   }
 }
+
+/* Stars Animation */
+.star {
+  background-color: white;
+  border-radius: 50%;
+  animation: twinkle var(--duration) ease-in-out infinite alternate;
+  opacity: 0;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes twinkle {
+  0% { opacity: 0; transform: scale(0.5); }
+  100% { opacity: var(--max-opacity); transform: scale(1); }
+}

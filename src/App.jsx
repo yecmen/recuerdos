@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import Stars from './components/Stars';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -25,7 +26,8 @@ function App() {
   };
 
   return (
-    <div style={{ width: '100%', minHeight: '100vh' }}>
+    <div style={{ width: '100%', minHeight: '100vh', position: 'relative' }}>
+      <Stars />
       {!isLoggedIn ? (
         <Login onLogin={handleLogin} />
       ) : (
