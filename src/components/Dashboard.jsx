@@ -262,6 +262,22 @@ export default function Dashboard({ onLogout }) {
                   )}
                 </button>
               </div>
+
+              {/* Mensaje Especial */}
+              <div 
+                className="glass-panel"
+                style={{ width: '100%', padding: '2rem', marginTop: '1rem', textAlign: 'center', background: 'linear-gradient(to bottom right, rgba(248, 113, 113, 0.05), rgba(23, 23, 23, 0.4))', borderLeft: '4px solid var(--primary)', borderRight: '4px solid var(--primary)' }}
+              >
+                <p style={{ fontStyle: 'italic', fontSize: '1.05rem', lineHeight: '1.8', color: 'var(--text-main)', marginBottom: '1rem' }}>
+                  "Verito, sé que a veces el camino pesa y el cansancio intenta ganar. Pero quiero que sepas algo: nunca estás sola. Mi promesa para ti no es solo de hoy, es de siempre."
+                </p>
+                <p style={{ fontStyle: 'italic', fontSize: '1.05rem', lineHeight: '1.8', color: 'var(--text-main)', marginBottom: '1rem' }}>
+                  "Estaré aquí para ser tu refugio cuando necesites descansar, tu fuerza cuando sientas que te rindes, y una sonrisa incondicional para ti y para Sebitas. Admiro profundamente la increíble mujer y madre que eres."
+                </p>
+                <p style={{ fontStyle: 'italic', fontSize: '1.05rem', lineHeight: '1.8', color: 'var(--primary)', fontWeight: '600' }}>
+                  "No importa lo difícil que se ponga el mundo afuera, en este espacio y en mí, siempre tendrán a alguien dispuesto a sostenerlos. No te rindas, que yo nunca me rendiré contigo."
+                </p>
+              </div>
             </motion.div>
           ) : (
             <motion.div
