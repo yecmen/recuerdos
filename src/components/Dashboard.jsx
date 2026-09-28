@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Image as ImageIcon, Flame, CheckCircle, Music, X, ChevronLeft, ChevronRight, Plus, Play, Pause, Upload } from 'lucide-react';
+import { LogOut, Image as ImageIcon, Flame, CheckCircle, Music, X, ChevronLeft, ChevronRight, Plus, Play, Pause, Upload, Edit2 } from 'lucide-react';
 import { supabase } from '../supabase';
 
 const playlist = [
@@ -35,6 +35,8 @@ export default function Dashboard({ onLogout }) {
 
   const [newVeritoPenalty, setNewVeritoPenalty] = useState('');
   const [newYeciPenalty, setNewYeciPenalty] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -89,6 +91,59 @@ export default function Dashboard({ onLogout }) {
     setPenalties(penalties.map(p => p.id === id ? { ...p, completed: newStatus } : p));
     
     await supabase.from('penitencias').update({ completed: newStatus }).eq('id', id);
+  };
+
+  const saveEdit = async (id) => {
+    if (!editValue.trim()) {
+      setEditingId(null);
+      return;
+    }
+    setPenalties(penalties.map(p => p.id === id ? { ...p, penalty: editValue } : p));
+    setEditingId(null);
+    await supabase.from('penitencias').update({ penalty: editValue }).eq('id', id);
+  };
+
+  const renderPenalty = (penalty) => {
+    const isEditing = editingId === penalty.id;
+    return (
+      <div key={penalty.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.8rem', background: 'rgba(0,0,0,0.3)', borderRadius: '0.8rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+        {isEditing ? (
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input 
+              type="text" 
+              value={editValue} 
+              onChange={e => setEditValue(e.target.value)} 
+              className="input-field" 
+              style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+              autoFocus
+              onKeyDown={e => { if(e.key==='Enter') saveEdit(penalty.id) }}
+            />
+            <button onClick={() => saveEdit(penalty.id)} style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: '0.4rem', padding: '0.4rem 0.6rem', cursor: 'pointer' }}><CheckCircle size={14}/></button>
+            <button onClick={() => setEditingId(null)} style={{ background: 'transparent', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '0.4rem', padding: '0.4rem 0.6rem', cursor: 'pointer' }}><X size={14}/></button>
+          </div>
+        ) : (
+          <>
+            <div style={{ color: penalty.completed ? 'var(--text-muted)' : 'var(--text-main)', textDecoration: penalty.completed ? 'line-through' : 'none', fontSize: '0.9rem' }}>
+              {penalty.penalty}
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+              <button 
+                onClick={() => togglePenalty(penalty.id)}
+                style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.4rem', background: penalty.completed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.05)', color: penalty.completed ? '#10b981' : 'white', border: 'none', borderRadius: '0.4rem', padding: '0.4rem', cursor: 'pointer', fontSize: '0.8rem' }}
+              >
+                <CheckCircle size={14} /> {penalty.completed ? 'Completado' : 'Completar'}
+              </button>
+              <button 
+                onClick={() => { setEditingId(penalty.id); setEditValue(penalty.penalty); }}
+                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: '0.4rem', padding: '0.4rem 0.8rem', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                <Edit2 size={12} /> Editar
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
   };
 
   const handleUploadPhoto = async (e) => {
@@ -291,14 +346,7 @@ export default function Dashboard({ onLogout }) {
               <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
                 <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--primary)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Lo que debe Verito</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', flex: 1 }}>
-                  {penalties.filter(p => p.loser === 'Verito').map(penalty => (
-                    <div key={penalty.id} onClick={() => togglePenalty(penalty.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.8rem', background: 'rgba(0,0,0,0.3)', borderRadius: '0.8rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ color: penalty.completed ? 'var(--text-muted)' : 'var(--text-main)', textDecoration: penalty.completed ? 'line-through' : 'none', fontSize: '0.9rem' }}>
-                        {penalty.penalty}
-                      </div>
-                      <div>{penalty.completed ? <CheckCircle size={18} color="#10b981" /> : <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)' }} />}</div>
-                    </div>
-                  ))}
+                  {penalties.filter(p => p.loser === 'Verito').map(renderPenalty)}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem' }}>
                   <input type="text" value={newVeritoPenalty} onChange={(e) => setNewVeritoPenalty(e.target.value)} placeholder="Agregar nueva deuda..." className="input-field" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }} />
@@ -310,14 +358,7 @@ export default function Dashboard({ onLogout }) {
               <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
                 <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--secondary)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Lo que debe Yeci</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', flex: 1 }}>
-                  {penalties.filter(p => p.loser === 'Yeci').map(penalty => (
-                    <div key={penalty.id} onClick={() => togglePenalty(penalty.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.8rem', background: 'rgba(0,0,0,0.3)', borderRadius: '0.8rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ color: penalty.completed ? 'var(--text-muted)' : 'var(--text-main)', textDecoration: penalty.completed ? 'line-through' : 'none', fontSize: '0.9rem' }}>
-                        {penalty.penalty}
-                      </div>
-                      <div>{penalty.completed ? <CheckCircle size={18} color="#10b981" /> : <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)' }} />}</div>
-                    </div>
-                  ))}
+                  {penalties.filter(p => p.loser === 'Yeci').map(renderPenalty)}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem' }}>
                   <input type="text" value={newYeciPenalty} onChange={(e) => setNewYeciPenalty(e.target.value)} placeholder="Agregar nueva deuda..." className="input-field" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }} />
