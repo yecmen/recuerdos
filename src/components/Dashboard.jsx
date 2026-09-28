@@ -1,29 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Image as ImageIcon, Flame, CheckCircle, Music, X, ChevronLeft, ChevronRight, Plus, Play, Pause } from 'lucide-react';
+import { LogOut, Image as ImageIcon, Flame, CheckCircle, Music, X, ChevronLeft, ChevronRight, Plus, Play, Pause, Upload } from 'lucide-react';
 import { supabase } from '../supabase';
-
-const photoFiles = [
-  'WhatsApp Image 2026-09-28 at 11.49.26.jpeg',
-  'WhatsApp Image 2026-09-28 at 11.49.25 (1).jpeg',
-  'WhatsApp Image 2026-09-28 at 11.49.25.jpeg',
-  'WhatsApp Image 2026-09-28 at 11.49.26 (1).jpeg',
-  'WhatsApp Image 2026-09-28 at 11.49.26 (2).jpeg',
-  'WhatsApp Image 2026-09-28 at 11.49.26 (3).jpeg',
-  'WhatsApp Image 2026-09-28 at 11.49.27 (2).jpeg',
-  'WhatsApp Image 2026-09-28 at 11.49.27.jpeg',
-  'WhatsApp Image 2026-09-28 at 11.49.28 (1).jpeg',
-  'WhatsApp Image 2026-09-28 at 11.49.28.jpeg',
-  'WhatsApp Image 2026-09-28 at 11.49.27 (1).jpeg'
-];
-
-const sampleMemories = photoFiles.map((file, i) => ({
-  id: i + 1,
-  type: 'image',
-  url: `/media/fotos/${file}`,
-  text: 'Nuestro Momento'
-}));
-
 
 const playlist = [
   '/media/music/reik.mp3',
@@ -36,11 +14,13 @@ export default function Dashboard({ onLogout }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const audioRef = useRef(null);
 
-  // Penalties State (Supabase Backend)
+  // Supabase Backend States
   const [penalties, setPenalties] = useState([]);
+  const [memories, setMemories] = useState([]);
 
   useEffect(() => {
     fetchPenalties();
+    fetchFotos();
   }, []);
 
   const fetchPenalties = async () => {
@@ -48,8 +28,15 @@ export default function Dashboard({ onLogout }) {
     if (data) setPenalties(data);
   };
 
+  const fetchFotos = async () => {
+    const { data } = await supabase.from('fotos').select('*').order('id', { ascending: true });
+    if (data) setMemories(data.map(f => ({ id: f.id, url: f.url })));
+  };
+
   const [newVeritoPenalty, setNewVeritoPenalty] = useState('');
   const [newYeciPenalty, setNewYeciPenalty] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Carousel State
   const [currentPhoto, setCurrentPhoto] = useState(0);
@@ -72,15 +59,13 @@ export default function Dashboard({ onLogout }) {
     }
   };
 
-
-
   useEffect(() => {
-    if (isLightboxOpen || activeTab !== 'momentos') return;
+    if (isLightboxOpen || activeTab !== 'momentos' || memories.length === 0) return;
     const interval = setInterval(() => {
-      setCurrentPhoto(prev => (prev + 1) % sampleMemories.length);
+      setCurrentPhoto(prev => (prev + 1) % memories.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, [isLightboxOpen, activeTab]);
+  }, [isLightboxOpen, activeTab, memories.length]);
 
   const handleSongEnded = () => {
     setCurrentSong(prev => (prev + 1) % playlist.length);
@@ -106,13 +91,40 @@ export default function Dashboard({ onLogout }) {
     await supabase.from('penitencias').update({ completed: newStatus }).eq('id', id);
   };
 
+  const handleUploadPhoto = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsUploading(true);
+    
+    // Upload to Supabase Storage
+    const fileName = `${Date.now()}_${file.name}`;
+    const { error: uploadError } = await supabase.storage.from('fotos').upload(fileName, file);
+    
+    if (uploadError) {
+      console.error(uploadError);
+      alert('Error subiendo foto a Supabase');
+      setIsUploading(false);
+      return;
+    }
+    
+    const { data: { publicUrl } } = supabase.storage.from('fotos').getPublicUrl(fileName);
+    
+    // Insert URL to DB
+    const { data } = await supabase.from('fotos').insert({ url: publicUrl }).select().single();
+    if (data) {
+      setMemories([...memories, { id: data.id, url: data.url }]);
+      setCurrentPhoto(memories.length); // go to the new photo
+    }
+    setIsUploading(false);
+  };
+
   return (
     <div style={{ minHeight: '100vh', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <audio ref={audioRef} src={playlist[currentSong]} onEnded={handleSongEnded} autoPlay />
 
       {/* Lightbox */}
       <AnimatePresence>
-        {isLightboxOpen && (
+        {isLightboxOpen && memories.length > 0 && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -123,17 +135,17 @@ export default function Dashboard({ onLogout }) {
               <X size={32} />
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <button onClick={() => setCurrentPhoto(p => (p - 1 + sampleMemories.length) % sampleMemories.length)} style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '50%', padding: '1rem', cursor: 'pointer' }}>
+              <button onClick={() => setCurrentPhoto(p => (p - 1 + memories.length) % memories.length)} style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '50%', padding: '1rem', cursor: 'pointer' }}>
                 <ChevronLeft size={32} />
               </button>
               <motion.img 
                 key={currentPhoto}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                src={sampleMemories[currentPhoto].url} 
+                src={memories[currentPhoto]?.url} 
                 style={{ maxHeight: '80vh', maxWidth: '70vw', objectFit: 'contain', borderRadius: '1rem' }} 
               />
-              <button onClick={() => setCurrentPhoto(p => (p + 1) % sampleMemories.length)} style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '50%', padding: '1rem', cursor: 'pointer' }}>
+              <button onClick={() => setCurrentPhoto(p => (p + 1) % memories.length)} style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '50%', padding: '1rem', cursor: 'pointer' }}>
                 <ChevronRight size={32} />
               </button>
             </div>
@@ -200,24 +212,55 @@ export default function Dashboard({ onLogout }) {
               <div 
                 className="glass-panel" 
                 style={{ width: '100%', padding: '1rem', cursor: 'pointer', overflow: 'hidden' }}
-                onClick={() => setIsLightboxOpen(true)}
+                onClick={() => { if (memories.length > 0) setIsLightboxOpen(true) }}
               >
                 <div style={{ position: 'relative', width: '100%', height: '400px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <AnimatePresence mode="wait">
-                    <motion.img 
-                      key={currentPhoto}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.5 }}
-                      src={sampleMemories[currentPhoto].url} 
-                      style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'contain', borderRadius: '1rem' }} 
-                    />
+                    {memories.length > 0 ? (
+                      <motion.img 
+                        key={currentPhoto}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -50 }}
+                        transition={{ duration: 0.5 }}
+                        src={memories[currentPhoto]?.url} 
+                        style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'contain', borderRadius: '1rem' }} 
+                      />
+                    ) : (
+                      <div style={{ color: 'var(--text-muted)' }}>Cargando fotos...</div>
+                    )}
                   </AnimatePresence>
-                  <div style={{ position: 'absolute', bottom: '10px', background: 'rgba(0,0,0,0.5)', padding: '0.3rem 0.6rem', borderRadius: '1rem', fontSize: '0.8rem', color: 'white' }}>
-                    Toca para expandir
-                  </div>
+                  {memories.length > 0 && (
+                    <div style={{ position: 'absolute', bottom: '10px', background: 'rgba(0,0,0,0.5)', padding: '0.3rem 0.6rem', borderRadius: '1rem', fontSize: '0.8rem', color: 'white' }}>
+                      Toca para expandir
+                    </div>
+                  )}
                 </div>
+              </div>
+
+              {/* Upload Button */}
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  ref={fileInputRef} 
+                  style={{ display: 'none' }} 
+                  onChange={handleUploadPhoto} 
+                />
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'auto', padding: '0.8rem 1.5rem' }}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    'Subiendo...'
+                  ) : (
+                    <>
+                      <Upload size={18} /> Agregar Foto
+                    </>
+                  )}
+                </button>
               </div>
             </motion.div>
           ) : (
