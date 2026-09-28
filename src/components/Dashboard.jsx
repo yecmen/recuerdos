@@ -24,27 +24,6 @@ const sampleMemories = photoFiles.map((file, i) => ({
   text: 'Nuestro Momento'
 }));
 
-const initialPenalties = [
-  // Lo que Verito debe
-  { id: 1, loser: 'Verito', penalty: 'La cena bajo la luna (de ser posible antes del 21)', completed: false },
-  { id: 2, loser: 'Verito', penalty: 'Wally', completed: false },
-  { id: 3, loser: 'Verito', penalty: 'Partido Futsal', completed: false },
-  { id: 4, loser: 'Verito', penalty: 'Ir a la óptica', completed: false },
-  { id: 5, loser: 'Verito', penalty: 'Algo para llevar a mi oficina y tenerlo como el de mi nena', completed: false },
-  { id: 6, loser: 'Verito', penalty: 'Darme algo (dijiste que si nos veíamos mañana viernes me lo darías)', completed: false },
-  { id: 7, loser: 'Verito', penalty: 'Y lo que te pediré hoy jejeje', completed: false },
-  { id: 8, loser: 'Verito', penalty: 'Viajemos', completed: false },
-  { id: 9, loser: 'Verito', penalty: 'No me aceptaste la piscina', completed: false },
-  
-  // Lo que Yeci debe
-  { id: 10, loser: 'Yeci', penalty: 'Pollo', completed: false },
-  { id: 11, loser: 'Yeci', penalty: 'Pollo', completed: false },
-  { id: 12, loser: 'Yeci', penalty: 'Pollo', completed: false },
-  { id: 13, loser: 'Yeci', penalty: 'Penitencia que no pidió', completed: false },
-  { id: 14, loser: 'Yeci', penalty: 'Penitencia que no pidió', completed: false },
-  { id: 15, loser: 'Yeci', penalty: 'Un regalito para Sebas', completed: false },
-  { id: 16, loser: 'Yeci', penalty: 'Un regalito para Verito', completed: false },
-];
 
 const playlist = [
   '/media/music/reik.mp3',
