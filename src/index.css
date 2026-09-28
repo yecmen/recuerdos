@@ -95,3 +95,48 @@ h1, h2, h3, h4 {
   background: rgba(255,255,255,0.2);
   border-radius: 10px;
 }
+
+/* Responsive Classes */
+.responsive-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.responsive-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.responsive-tabs {
+  display: flex;
+  gap: 1rem;
+}
+
+.responsive-title {
+  font-size: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .responsive-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  .responsive-header > div {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .responsive-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .responsive-tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .responsive-title {
+    font-size: 1.25rem;
+  }
+}

@@ -156,10 +156,10 @@ export default function Dashboard({ onLogout }) {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-panel"
-        style={{ width: '100%', maxWidth: '800px', padding: '1.5rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        className="glass-panel responsive-header"
+        style={{ width: '100%', maxWidth: '800px', padding: '1.5rem', marginBottom: '2rem' }}
       >
-        <h1 style={{ fontSize: '1.5rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <h1 className="responsive-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ background: 'linear-gradient(to right, var(--primary), var(--secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Nuestro Espacio
           </span>
@@ -181,7 +181,7 @@ export default function Dashboard({ onLogout }) {
         </div>
       </motion.div>
 
-      <div style={{ width: '100%', maxWidth: '800px', display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="responsive-tabs" style={{ width: '100%', maxWidth: '800px', marginBottom: '2rem' }}>
         <button 
           onClick={() => setActiveTab('momentos')}
           className="glass-panel"
@@ -269,7 +269,7 @@ export default function Dashboard({ onLogout }) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}
+              className="responsive-grid"
             >
               {/* Columna Verito */}
               <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
